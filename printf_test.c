@@ -6,7 +6,7 @@
 /*   By: ldoyen-- <ldoyen--@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/20 11:21:02 by ldoyen--          #+#    #+#             */
-/*   Updated: 2023/11/28 10:38:06 by ldoyen--         ###   ########.fr       */
+/*   Updated: 2023/12/01 15:16:36 by ldoyen--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,14 +30,14 @@ int	main(int ac, char **av)
 	printf("Cft = %d\n\n", cft);
 
 	printf("* TEST MIXT id *\n\n");
-	myft = ft_printf("%d ok ok %i %d %i %d %i\n", -2147483647, -214783647, 0, 0, 2147483647, 2147483647);
-	cft = printf("%d ok ok %i %d %i %d %i\n", -2147483647, -214783647 + 1, 0, 0, 2147483647, 2147483647);
+	myft = ft_printf("%d ok ok %i %d %i %d %i\n", -2147483648, -2147483648, 0, 0, 2147483647, 2147483647);
+	cft = printf("%ld ok ok %li %d %i %d %i\n", -2147483648, -2147483648, 0, 0, 2147483647, 2147483647);
 	printf("My ft = %d\n", myft);
 	printf("Cft = %d\n\n", cft);
 
 	printf("* TEST MIXT uxX *\n\n");
-	myft = ft_printf("%u %u %x %X\n", -1, -1, -1, -1);
-	cft = printf("%u %u %x %X\n", -1, -1, -1, -1);
+	myft = ft_printf("%u %u %x %X %u %x %X\n", -1, -1, -1, -1, 0, 0, 0);
+	cft = printf("%u %u %x %X %u %x %X\n", -1, -1, -1, -1, 0, 0, 0);
 	printf("My ft = %d\n", myft);
 	printf("Cft = %d\n\n", cft);
 
@@ -50,7 +50,7 @@ int	main(int ac, char **av)
 	printf("* TEST null format *\n\n");
 	myft = ft_printf(NULL);
 	//cft = printf(NULL);
-	printf("My ft = %d\n", myft);
+	printf("My ft = \n%d\n", myft);
 	//printf("Cft = %d\n\n", cft);
 
 	printf("* TEST empty *\n\n");
@@ -58,10 +58,6 @@ int	main(int ac, char **av)
 	cft = printf("");
 	printf("My ft = %d\n", myft);
 	printf("Cft = %d\n\n", cft);
-
-	printf("* TEST min id *\n\n");
-	myft = ft_printf("%d\n%i\n", -214783648, -214783648);
-	printf("My ft = %d\n", myft);
 
 	return (0);
 }
