@@ -1,0 +1,146 @@
+#############################################
+#				Things to test              #
+#############################################
+
+-Chemin relatif (au moins ./ et */*)
+-Chemin absolu
+-Copy d'une cmd
+-Commande name (pas de chemin)
+-Leak FDS
+-Wrong infile / wrong outfile
+-Here DOC
+-EXIT STATUS (au moins 0, 126 et 127)
+-Wrong commande name (first et second position)
+-Wrong argument command (first et second position)
+-No arg ("")
+
+#############################################
+#				Evaluation                  #
+#############################################
+
+valgrind --log-file=val.log --trace-children=yes --track-fds=yes --leak-check=full
+
+I- Test no error : Obligatoire
+
+./pipex infile cat "wc -l" outfile
+rm outfile
+./pipex infile "cat -e" "grep a" outfile
+rm outfile
+
+II- Test wrong infile : Obligatoire
+
+./pipex wrong_infile cat "wc -l" outfile
+rm outfile
+chmod 000 infile
+./pipex infile cat "wc -l" outfile
+chmod 644 infile
+rm outfile
+
+==> Le programme doit lancer toutes les commandes en parallele meme
+si infile n'est pas accessible. On doit pouvoir retrouver le
+resultat "0" dans le outfile. Verifier la coherance du message d'erreur
+(permission denied or no such file or directory).
+
+III- Test wrong outfile : Obligatoire
+
+touch outfile
+chmod 000 outfile
+./pipex infile cat "wc -l" outfile
+rm outfile
+
+==> Verifier la coherance du message d'erreur (permission denied
+or no such file or directory).
+
+IV- Test env path : Obligatoire
+
+env -i ./pipex infile cat "wc -l" outfile
+rm outfile
+
+==> Le programme ne devrait pas pouvoir creer un chemin de commande
+valide a entrer dans execve. Verifier dans le code que la construction
+du chemin de la commande se fait bien avec le char **env. Verifier
+la coherance du message d'erreur (command not found).
+
+V- Test chemin absolu : Obligatoire
+
+env -i ./pipex infile /bin/cat "/bin/wc -l" outfile
+rm outfile
+./pipex infile /bin/cat "/bin/wc -l" outfile
+rm outfile
+./pipex infile /bin/cata "/bin/wc -l" outfile
+
+==> Le programme devrait etre capable de lancer les commandes si un
+chemin absolu est renseigne (et que la commande existe bien au bout
+de ce chemin). Verifier la coherence du message d'erreur sur une
+commande non existante (no such file).
+
+VI- Test chemin relatif : Obligatoire
+
+cp /bin/cat cat_cpy
+cp /bin/cat test/cat_cpy
+./pipex infile ./cat_cpy "wc -l" outfile
+rm outfile
+./pipex infile test/cat_cpy "wc -l" outfile
+rm outfile
+./pipex infile ../../cat_cpy "wc -l" outfile
+rm outfile
+
+==> Le programme devrait pouvoir executer les copies des commandes
+shell
+
+VII- Wrong command name : Obligatoire
+
+./pipex infile cata "wc -l" outfile
+rm outfile
+./pipex infile cat "wca -l" outfile
+rm outfile
+./pipex infile "" "wc -l" outfile
+rm outfile
+
+==> Le programme doit executer l'ensemble des commandes meme si
+l'une d'entre elles n'existe pas. Verifier outfile si c'est la
+commande 1 qui est fausse. Verifier comportement du programme
+si args de la commande est vide (""). Verifier la coherence du message
+d'erreur (command not found or permission denied).
+
+VIII- Exit status : Optionnel
+
+./pipex infile cata "wc -l" outfile
+rm outfile
+./pipex infile cat "wca -l" outfile
+rm outfile
+./pipex infile "cat" "" outfile
+rm outfile
+
+==> Le programme doit renvoyer l'exit status du dernier
+child lance (0 si success, 127 si command not found et
+126 si argv de la commande est vide).
+
+IX- Wrong command arg : Obligatoire
+
+./pipex infile "cat -bibi" "wc -l" outfile
+rm outfile
+./pipex infile cat "wc -bibi" outfile
+rm outfile
+
+==> Verifier la coherence du message d'erreur et le resultat
+dans outfile (c'est normalement gere par execve).
+
+X- Test urandom / stdin : Obligatoire
+
+./pipex /dev/urandom cat head outfile
+./pipex /dev/stdin cat head outfile
+
+==> Le programme ne doit pas tourner dans le vide. Des que le child qui gere
+la commande head a termine, elle doit fermer le pipe et le child qui gere
+le cat doit s'arreter meme s'il n'a pas fini d'afficher tout le fichier de
+depart (comme le bash ou zsh).
+
+XI- Test here_doc : OBLIGATOIRE si bonus here_doc
+
+./pipex here_doc LIM cat "grep a" "wc -l" outfile
+
+==> On doit pouvoir quitter le here_doc en tapant LIM ou avec CTRL + D (comme le bash).
+Aucun fichier supplementaire ne doit rester a la fin du programme. Verifier les leaks
+et segault possibles.
+
